@@ -88,4 +88,17 @@
 #### Lab: DOM-Based Open Redirection
 - `https://0a1900420319cd93805203df00460069.web-security-academy.net/post?postId=4&url=https://exploit-0aaf008f0383cd0e80ea02e6016500db.exploit-server.net/exploit#`
 
+#### DOM-based Cookie Manipulation
+- Based on the name, I knew I was looking for some cookie shenanigans. I noticed the value of 'lastViewedProduct' included a URL to the last viewed product (of course). So we have our source, where is our sink?
+- Found it! We can see JavaScript that says the following. So I found the issue, but I'm actually a bit unsure how to craft the payload ... let's think:
+```
+<script>
+  document.cookie = 'lastViewedProduct=' + window.location + '; SameSite=None; Secure'
+</script>
+```
+- I began with a very simple payload which did not work, and I was also informed in the lab instructions that I will need my exploit server (later): `https://0ab2002103e93f1e801f2bbb007100b5.web-security-academy.net/product?productId=6&<script>print()</script>` which was encoded into `https://0ab2002103e93f1e801f2bbb007100b5.web-security-academy.net/product?productId=6&%3Cscript%3Eprint()%3C/script%3E`.
+- The issue with this payload is that it just isn't expecting to execute JavaScript here:
+<img width="788" height="164" alt="image" src="https://github.com/user-attachments/assets/78c27ad4-694f-4b00-bfeb-a25ce4f0ac28" />
+
+
 
