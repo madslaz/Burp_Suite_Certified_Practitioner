@@ -3,20 +3,7 @@
 ### Miscellaneous Uncs
 - **Source**: A JavaScript property that allows an attacker to control data, where the untrusted input enters the application.
   - Examples: `location.search` (URL query parameters), `document.referrer`, `document.cookie`
-  - Common sources:
-    -`document.URL`
-    -`document.URI`
-    -`document.base`
-    -`location`
-    -`document.cookie`
-    -`document.referrer`
-    -`window.name`
-    -`history.pushState`
-    -`history.replaceState`
-    -`localStorage`
-    -`sessionStorage`
-    -`IndexedDB`
-    -`Database`
+  - Common sources:`document.URL`, `document.URI`, `document.base`, `location`,`document.cookie`, `document.referrer`, `window.name`, `history.pushState`, `history.replaceState`, `localStorage`, `sessionStorage`, `IndexedDB`, `Database`
 - **Sink**: A function or a DOM object that allows code execution or renders HTML. This is where the untrusted input causes the damage.
   - Examples: `eval()`, `innerHTML`, `document.write()`
 - DOM clobbering is when you inject HTML into a page to manipulate the DOm and change the behavior of the JavaScript on the site. Most common form uses an anchor element to overwrite a global variable that is used by the application in an unsafe way, such as generating a dynamic script URL. 
