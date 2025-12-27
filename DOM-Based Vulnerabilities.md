@@ -100,5 +100,3 @@ window.addEventListener('message', function(e) {
                             }
 ```
 - `JSON.parse()` parses a JSON string, constructing the JS value or object described by the string. Example, `const json = '{"result":true, "count":42}'; const obj = JSON.parse(json); console.log(obj.count);` would result in 42. `obj.result` would result in true.
-- 
-- 
