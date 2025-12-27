@@ -1,5 +1,26 @@
 ## DOM-Based Vulnerabilities 
 
+### Miscellaneous Uncs
+- **Source**: A JavaScript property that allows an attacker to control data, where the untrusted input enters the application.
+  - Examples: `location.search` (URL query parameters), `document.referrer`, `document.cookie`
+  - Common sources:
+    -`document.URL`
+    -`document.URI`
+    -`document.base`
+    -`location`
+    -`document.cookie`
+    -`document.referrer`
+    -`window.name`
+    -`history.pushState`
+    -`history.replaceState`
+    -`localStorage`
+    -`sessionStorage`
+    -`IndexedDB`
+    -`Database`
+- **Sink**: A function or a DOM object that allows code execution or renders HTML. This is where the untrusted input causes the damage.
+  - Examples: `eval()`, `innerHTML`, `document.write()`
+- DOM clobbering is when you inject HTML into a page to manipulate the DOm and change the behavior of the JavaScript on the site. Most common form uses an anchor element to overwrite a global variable that is used by the application in an unsafe way, such as generating a dynamic script URL. 
+
 #### Lab: DOM XSS Using Web Messages
 - Exploit server to post a message to the target site that causes the `print()` function to be called.
 - When I loaded the lab, I noticed this odd `[object Object` that was appearing at the top of the homepage. I reviewed the source code, and I saw the following JavaScript. I recognized the `innerHTML` as bad immediately. So it's getting the document with element id of `ads`. Unlike the resource available at https://portswigger.net/web-security/dom-based/controlling-the-web-message-source, this is not being passed into an `eval()` function.
