@@ -6,7 +6,8 @@
   - Common sources:`document.URL`, `document.URI`, `document.base`, `location`,`document.cookie`, `document.referrer`, `window.name`, `history.pushState`, `history.replaceState`, `localStorage`, `sessionStorage`, `IndexedDB`, `Database`
 - **Sink**: A function or a DOM object that allows code execution or renders HTML. This is where the untrusted input causes the damage.
   - Examples: `eval()`, `innerHTML`, `document.write()`
-- DOM clobbering is when you inject HTML into a page to manipulate the DOm and change the behavior of the JavaScript on the site. Most common form uses an anchor element to overwrite a global variable that is used by the application in an unsafe way, such as generating a dynamic script URL. 
+- DOM clobbering is when you inject HTML into a page to manipulate the DOm and change the behavior of the JavaScript on the site. Most common form uses an anchor element to overwrite a global variable that is used by the application in an unsafe way, such as generating a dynamic script URL.
+  - For DOM clobbering to work, there must be a "hole" in the JavaScript. The browser logic works like this: Did the developer define a variable named X? If yes, the browser uses the developer's variable (`let X`, `var X`, `const X`, function arguments, etc.). If not, is there an HTML element with `id='X'`? If yes, the browser uses the HTML element .. so you win! Basically, if you can fill the hole with a legitimate JavaScript variable first, you cannot clobber as the browser will never look at your malicious HTML element. What you need to do is find a spot where the developer checks for a variable that does not exist yet. 
 
 #### Lab: DOM XSS Using Web Messages
 - Exploit server to post a message to the target site that causes the `print()` function to be called.
