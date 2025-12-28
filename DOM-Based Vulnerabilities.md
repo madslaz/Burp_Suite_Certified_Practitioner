@@ -7,7 +7,22 @@
 - **Sink**: A function or a DOM object that allows code execution or renders HTML. This is where the untrusted input causes the damage.
   - Examples: `eval()`, `innerHTML`, `document.write()`
 - DOM clobbering is when you inject HTML into a page to manipulate the DOm and change the behavior of the JavaScript on the site. Most common form uses an anchor element to overwrite a global variable that is used by the application in an unsafe way, such as generating a dynamic script URL.
-  - For DOM clobbering to work, there must be a "hole" in the JavaScript. The browser logic works like this: Did the developer define a variable named X? If yes, the browser uses the developer's variable (`let X`, `var X`, `const X`, function arguments, etc.). If not, is there an HTML element with `id='X'`? If yes, the browser uses the HTML element .. so you win! Basically, if you can fill the hole with a legitimate JavaScript variable first, you cannot clobber as the browser will never look at your malicious HTML element. What you need to do is find a spot where the developer checks for a variable that does not exist yet. 
+  - For DOM clobbering to work, there must be a "hole" in the JavaScript. The browser logic works like this: Did the developer define a variable named X? If yes, the browser uses the developer's variable (`let X`, `var X`, `const X`, function arguments, etc.). If not, is there an HTML element with `id='X'`? If yes, the browser uses the HTML element .. so you win! Basically, if you can fill the hole with a legitimate JavaScript variable first, you cannot clobber as the browser will never look at your malicious HTML element. What you need to do is find a spot where the developer checks for a variable that does not exist yet.\
+- JavaScript notes:
+  - `var` is function-scoped, hoisted and initialized in undefined. Allows redeclaration. Hoisted, like an elevator, means the browser moves your variable declarations to the top of the code before running it. So, for `var`, the browser sees `var x` at the bottom of your code, it lifts the name `x` to the top, and it gives it a placeholder value of `undefined`. This won't cause a crash if you try and print it before you define it - it will just say `undefined`. 
+  - `let` is block-scoped, hoisted but not initialized. Assessing `let` variables before declaration results in `ReferenceError`, doesn't allow redeclaration within same scope. Similar to `var`, `let` is hoisted, but it is not initialized (creates "Temporal Dead Zone") - if you try to print it before you define it, you will get a `Reference error`. 
+  - `const` is also block-scoped, hoisted but not initialized. Once assigned, `const` cannot be reassigned, however, it holds an object or array, the properties can still be modified. More on this: you can create a box labeled 'myUser' `const myUser = { name: "Alice"};`. Illegally, you cannot try and point the label to a new box, like `myUser = { name: "Bob"};` ERROR!, but you can change the contents of the existing box, like `myUser.name = "Bob";`. 
+
+```
+function test() {
+  if (true) {
+    var a = "I bleed out!";
+    let b = "I stay inside!";
+  }
+console.log(a); // Works! Prints "I bleed out!"
+console.log(b); // ERROR! "b" is not defined. It died inside the curly braces.
+}
+```
 
 #### Lab: DOM XSS Using Web Messages
 - Exploit server to post a message to the target site that causes the `print()` function to be called.
@@ -129,6 +144,7 @@ let websiteElement = document.createElement("a");
                     websiteElement.setAttribute("href", comment.website);
                     firstPElement.appendChild(websiteElement)
 ```
+- I continued to examine the JavaScript, and I found a line with our suspicious OR (`||`) syntax...
 
 
 
