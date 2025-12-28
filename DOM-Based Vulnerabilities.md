@@ -145,6 +145,12 @@ let websiteElement = document.createElement("a");
                     firstPElement.appendChild(websiteElement)
 ```
 - I continued to examine the JavaScript, and I found a line with our suspicious OR (`||`) syntax...
-
+```
+let defaultAvatar = window.defaultAvatar || {avatar: '/resources/images/avatarDefault.svg'}
+let avatarImgHTML = '<img class="avatar" src="' + (comment.avatar ? escapeHTML(comment.avatar) : defaultAvatar.avatar) + '">';
+```
+- Breaking down the above, it's a Ternary Operator (the `?` and `:` to verify if the comment has its own avatar or needs a default one. `(comment.avatar ? ... : ...)` is an `if/else` statement that asks "Does this specific comment have a custom avatar defined in the database? If yes (TRUE), it runs the following: `escapeHTML(comment.avatar)` and if not, it runs `defaultAvatar.avatar`. Now, if a user provides the avatar, it is wrapped in `escapeHTML(...)` which renders malicious characters harmless. If the code falls back to the default, it uses `defaultAvatar.avatar`. 
+- My initial payload results in a broken image icon - I forgot that modern browsers do not execute JavaScript inside the `src` attribute of an `<img>` tag. We have to break out of it and add our own event handler `<a id="defaultAvatar"><a id="defaultAvatar" name="avatar" href="javascript:alert()">`...
+- 
 
 
