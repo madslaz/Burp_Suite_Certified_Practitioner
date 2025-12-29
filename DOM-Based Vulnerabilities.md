@@ -115,11 +115,12 @@ console.log(b); // ERROR! "b" is not defined. It died inside the curly braces.
 - I began with a very simple payload which did not work, and I was also informed in the lab instructions that I will need my exploit server (later): `https://0ab2002103e93f1e801f2bbb007100b5.web-security-academy.net/product?productId=6&<script>print()</script>` which was encoded into `https://0ab2002103e93f1e801f2bbb007100b5.web-security-academy.net/product?productId=6&%3Cscript%3Eprint()%3C/script%3E`.
 - The issue with this payload is that it just isn't expecting to execute JavaScript here, so we need to close out this href. 
 <img width="788" height="164" alt="image" src="https://github.com/user-attachments/assets/78c27ad4-694f-4b00-bfeb-a25ce4f0ac28" />
-- My second payload did not work either: `"><script>print()</script>` - why? Well, I was looking at the Elements tab and not the Sources tab. The Elements tab is the DOM tree that the browser has rebuilt, and it has been tidied and changed by the browser. In the actual sources tab, we can see that they use single quotes for the `<a href>` so I need to actually close it with single quotes.
-- Okie! Now that we have the very simple payload, just appending `'><script>print()</script>`, we now have to use our exploit server to deliver this to a victim. Final payload which solved the lab was:
+* My second payload did not work either:
 ```
-<iframe src="https://0ab2002103e93f1e801f2bbb007100b5.web-security-academy.net/product?productId=4&'><script>print()</script>", width="2000" height="2000", '*'>
+"><script>print()</script>
 ```
+Why? Well, I was looking at the Elements tab and not the Sources tab. The Elements tab is the DOM tree that the browser has rebuilt, and it has been tidied and changed by the browser. In the actual sources tab, we can see that they use single quotes for the a href so I need to actually close it with single quotes.
+- Okie! Now that we have the very simple payload, just appending `'><script>print()</script>`, we now have to use our exploit server to deliver this to a victim. Final payload which solved the lab was: `<iframe src="https://0ab2002103e93f1e801f2bbb007100b5.web-security-academy.net/product?productId=4&'><script>print()</script>", width="2000" height="2000", '*'>`
 
 #### Exploiting DOM clobbering to enable XSS
 - Technique where you inject HTML into a page to manipulate the DOM and ultimately change the behavior of the JavaScript on the page. Particularly useful in cases where XSS is not possible, but you can control some HTML on a page where the attributes `id` or `name` are whitelisted by the HTML filter. Most common form of DOM clobbering uses an anchor element to overwrite a global variable, which is then used by the application in an unsafe way, such as generating a dynamic script URL.
@@ -161,3 +162,4 @@ let avatarImgHTML = '<img class="avatar" src="' + (comment.avatar ? escapeHTML(c
       * Once the browser finishes building the DOM element, it automatically decodes `&quot;` back into a real " inside the computer's memory.
   * When you make a second post, the browser uses the newly-clobbered global variable, which smuggles the payload in the `onerror` event handler and triggers the `alert()`. 
 
+#### C
