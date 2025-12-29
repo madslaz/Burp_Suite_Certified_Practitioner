@@ -23,6 +23,8 @@ console.log(a); // Works! Prints "I bleed out!"
 console.log(b); // ERROR! "b" is not defined. It died inside the curly braces.
 }
 ```
+- Another DOM clobbering technique is to use the `form` element along with an element such as `input` to clobber DOM properties. E.g., clobbering the `attributes` property enables you to bypass client-side filters that use it in in their logic. Although the filter will enumerate the `attributes` property, it will not actually remove any attributes because the property has been clobbered with a DOM node. As a result, you will be able to inject malicious attributes that would normally be filtered out.
+  - Consider the following injection: `<form onclick=alert(1)><input id=attributes>Click me` In this case, the client-side filter would traverse the DOM and encounter a whitelisted `form` element. Normally, the filter would loop through the `attributes` property of the `form` element and remove any blacklisted attributes; however, because the `attributes` property has been clobbered with the `input` element, the filter loops through the `input` element instead. As the `input` element has an undefined length, the conditions for the `for` loop of the filter (for example, `i<element.attributes.length`) are not met, and the filter simply moves on to the next element instead. This results in the `onclick` event being ignored altogether by the filter, which subsequently allows the `alert()` function to be called in the browser. 
 
 #### Lab: DOM XSS Using Web Messages
 - Exploit server to post a message to the target site that causes the `print()` function to be called.
@@ -160,4 +162,6 @@ let avatarImgHTML = '<img class="avatar" src="' + (comment.avatar ? escapeHTML(c
       * Once the browser finishes building the DOM element, it automatically decodes `&quot;` back into a real " inside the computer's memory.
   * When you make a second post, the browser uses the newly-clobbered global variable, which smuggles the payload in the `onerror` event handler and triggers the `alert()`. 
 
-#### C
+#### Clobbering DOM attributes to bypass HTML filters
+- Lab uses the HTMLJanitor library, which is vulnerable to DOM clobbering. Solve lab by injecting a vector which calls the `print()` function. May need to use the exploit server to make your vector auto-execute in the victim's browser...
+- 
