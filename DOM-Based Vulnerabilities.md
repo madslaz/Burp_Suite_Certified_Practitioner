@@ -24,7 +24,20 @@ console.log(b); // ERROR! "b" is not defined. It died inside the curly braces.
 }
 ```
 - Another DOM clobbering technique is to use the `form` element along with an element such as `input` to clobber DOM properties. E.g., clobbering the `attributes` property enables you to bypass client-side filters that use it in in their logic. Although the filter will enumerate the `attributes` property, it will not actually remove any attributes because the property has been clobbered with a DOM node. As a result, you will be able to inject malicious attributes that would normally be filtered out.
-  - Consider the following injection: `<form onclick=alert(1)><input id=attributes>Click me` In this case, the client-side filter would traverse the DOM and encounter a whitelisted `form` element. Normally, the filter would loop through the `attributes` property of the `form` element and remove any blacklisted attributes; however, because the `attributes` property has been clobbered with the `input` element, the filter loops through the `input` element instead. As the `input` element has an undefined length, the conditions for the `for` loop of the filter (for example, `i<element.attributes.length`) are not met, and the filter simply moves on to the next element instead. This results in the `onclick` event being ignored altogether by the filter, which subsequently allows the `alert()` function to be called in the browser. 
+  - Consider the following injection: `<form onclick=alert(1)><input id=attributes>Click me` In this case, the client-side filter would traverse the DOM and encounter a whitelisted `form` element. Normally, the filter would loop through the `attributes` property of the `form` element and remove any blacklisted attributes; however, because the `attributes` property has been clobbered with the `input` element, the filter loops through the `input` element instead. As the `input` element has an undefined length, the conditions for the `for` loop of the filter (for example, `i<element.attributes.length`) are not met, and the filter simply moves on to the next element instead. This results in the `onclick` event being ignored altogether by the filter, which subsequently allows the `alert()` function to be called in the browser.
+  - This technique confused me a bit at first, so let's establish some basic facts. A sanitizer usually walks through every element on the page to strip out dangerous code. When it sees a `<form>`, it runs a loop like this:
+```
+let element = document.querySelector('form');
+let attrs = element.attributes; // <--- The "List" of attributes
+
+// The Loop: Check every attribute in the list
+for (let i = 0; i < attrs.length; i++) { // Reminder that ++ is an increment operator
+    if (attrs[i].name === "onclick") {
+        element.removeAttribute("onclick"); // DELETE THE DANGER
+    }
+}
+```
+  - 
 
 #### Lab: DOM XSS Using Web Messages
 - Exploit server to post a message to the target site that causes the `print()` function to be called.
