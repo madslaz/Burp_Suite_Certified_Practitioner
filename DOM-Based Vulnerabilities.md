@@ -25,7 +25,7 @@ console.log(b); // ERROR! "b" is not defined. It died inside the curly braces.
 ```
 - Another DOM clobbering technique is to use the `form` element along with an element such as `input` to clobber DOM properties. E.g., clobbering the `attributes` property enables you to bypass client-side filters that use it in in their logic. Although the filter will enumerate the `attributes` property, it will not actually remove any attributes because the property has been clobbered with a DOM node. As a result, you will be able to inject malicious attributes that would normally be filtered out.
   - Consider the following injection: `<form onclick=alert(1)><input id=attributes>Click me` In this case, the client-side filter would traverse the DOM and encounter a whitelisted `form` element. Normally, the filter would loop through the `attributes` property of the `form` element and remove any blacklisted attributes; however, because the `attributes` property has been clobbered with the `input` element, the filter loops through the `input` element instead. As the `input` element has an undefined length, the conditions for the `for` loop of the filter (for example, `i<element.attributes.length`) are not met, and the filter simply moves on to the next element instead. This results in the `onclick` event being ignored altogether by the filter, which subsequently allows the `alert()` function to be called in the browser.
-  - This technique confused me a bit at first, so let's establish some basic facts. A sanitizer usually walks through every element on the page to strip out dangerous code. When it sees a `<form>`, it runs a loop like this:
+  - This technique confused me a bit at first, so let's establish some basic facts. A sanitizer usually walks through every element on the page to strip out dangerous code. When it sees a `<form>`, it runs a loop like shown below.
 ```
 let element = document.querySelector('form');
 let attrs = element.attributes; // <--- The "List" of attributes
@@ -37,7 +37,19 @@ for (let i = 0; i < attrs.length; i++) { // Reminder that ++ is an increment ope
     }
 }
 ```
-  - 
+
+  - Now HTML forms have a unique, ancient behavior: if you put an input inside a form, the form gets a property with that input's ID. So what does that mean? If you have a form like shown below, JavaScript can access that input as myForm.username. 
+```
+<form id="myForm">
+  <input id="username>
+</form>
+```
+- Okay, what does this attack finally look like? Shown below, when the sanitizer asks for `myForm.attributes`, it goes not get the expected built-in list of attributes (the `NameNodeMap`, a collection of `Attr` objects), but it gets the actual input element itself! The input element clobbers the native `.attributes` property. Since `i < undefined` is FALSE, the loop runs zero times. 
+```
+<form onclick="alert(1)">
+  <input id="attributes">
+</form>
+```
 
 #### Lab: DOM XSS Using Web Messages
 - Exploit server to post a message to the target site that causes the `print()` function to be called.
@@ -177,4 +189,22 @@ let avatarImgHTML = '<img class="avatar" src="' + (comment.avatar ? escapeHTML(c
 
 #### Clobbering DOM attributes to bypass HTML filters
 - Lab uses the HTMLJanitor library, which is vulnerable to DOM clobbering. Solve lab by injecting a vector which calls the `print()` function. May need to use the exploit server to make your vector auto-execute in the victim's browser...
-- 
+- I took a look at htmlJanitor.js, and I noticed the JavaScript very similar to our example sanitizer which iterates through attributes to remove dangerous executions ... my initial payload and iframe did not work (shown below) - why? BECAUSE I AM STUPID! In all my learning, I forgot about SOP. Of course we are working across two different domains (lab versus exploit server), so I need to remove cross-origin JavaScript. We can just use # (which works with any id) to point the URL directly to our trap. Additionally, forms are not focusable by default - you need to use attributes like `tabindex`. I originally tried `autofocus` on the form element, but this doesn't work as the browser considers `<form>` to be a structural element (a container like `<div>` or `<p>` - if you can't click it, you can't type it, then you can't autofocus it. You must use `tabindex="0"` which tells the brower to teach this form like a bytton. 
+
+```
+<form id="myTrapp" onfocus="print()">
+    <input id="attributes">
+</form>
+
+<iframe src="https://0a710024030b572f80e3032600f30025.web-security-academy.net/post?postId=6" width="2000" height="2000" onload="this.contentWindow.document.getElementById('myTrapp').focus()">
+```
+- Time for fixed payload:
+```
+<form id="myForm" onfocus="print()" tabindex="0">
+    <input id="attributes">
+</form>
+```
+- Buuuuut, it wasn't working with this exploit server iframe: `<iframe src="https://0a710024030b572f80e3032600f30025.web-security-academy.net/post?postId=8#IHateGemini" width="2000" height="2000"></iframe>` - maybe a timing issue, so we gotta check if we can navigate to the form just from my own browser, which we could. It focuses and print() happens, so that means there's a timing issue. We can also notice this visually by the comments popping a split second later onto the page. Loaded by JavaScript (AJAX) instead of HTML. We need to add a delay through setTimeout(Function, Delay) which is a built-in JavaScript function. 
+```
+<iframe src="https://0a710024030b572f80e3032600f30025.web-security-academy.net/post?postId=8" onload="setTimeout(()=>this.src+='#myForm', 500)" width="2000" height="2000"></iframe>
+```
