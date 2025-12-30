@@ -55,3 +55,6 @@ if ($user->isAdmin === true) {
 ```
 - The vulnerable code would instantiate a `User` object based on the data from the cookie, including the attacker-modified `isAdmin` attribute. At no point is the authenticity of the serialized object checked. This data is then passed into the conditional statement and, in this case, would allow for an easy privilege escalation. This simple scenario is not common in the wild; however, editing an attribute value in this way demonstrates the first step towards accessing the massive amount of attack-surface exposed by insecure deserialization. 
 
+#### Lab: Modifying Serialized Objects
+* Decoding the session token as Base64 results in `O:4:"User":2:{s:8:"username";s:6:"wiener";s:5:"admin";b:0;}`. Flipping 0 to 1 and then attaching the session token to the request to `GET /admin/delete?username=carlos` to delete Carlos.
+* I was able to identify the admin panel by refreshing my account page with the altered session token, and the option appeared. I could use match and replace to make this easier. 
