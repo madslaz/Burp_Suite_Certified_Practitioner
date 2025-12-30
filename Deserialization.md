@@ -3,4 +3,10 @@
 * Serializing data makes it much simpler to write complex data to inter-process memory, a file, or database, and send complex data, for example, over a network, between different components of an application, or in an API call.
 * Crucially, when serializing an object, its state is also persisted. In other words, the object's attributes are preserved, along with their assigned values.
 * **Deserialization** is the process of restoring this byte stream to a fully functional replica of the original object, in the exact state as when it was serialized. The website's logic can then interact with this deserialized object, just like it would with any other object.
-* Many languages offer native support for serialization; exactly how objects are serialized depends on the language. Some languages serialize into binary formats, whereas others use different string formats, with varying degrees of human readability. 
+* Many languages offer native support for serialization; exactly how objects are serialized depends on the language. Some languages serialize into binary formats, whereas others use different string formats, with varying degrees of human readability.
+  * Note that all of the original object's attributes are stored in the serialized data stream, including any private fields. To prevent a field from being serialized, it must be explicitly marked as "transient" in the class declaration.
+  * Be aware that when working with different programming languages, serialization may be referred to as marshalling (Ruby) or pickling (Python). These terms are synonymous with "serialization" in this context.
+
+### Insecure Deserialization
+* Insecure deserialization is when user-controllable data is deserialized by a website. This potentially enables an attacker to manipulate serialized objects in order to pass harmful data into the application code.
+* It is even possible to replace a serialized object with an object of an entirely different class. Alarmingly, objects of any class that is available
