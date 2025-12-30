@@ -46,5 +46,12 @@ $user->isLoggedIn = true;
 
 #### Modifying Object Attributes
 - When tampering with the data, as long as the attacker preserves a valid serialized object, the deserialization process will create a server-side object with the modified attribute values. As a simple example, consider a website that uses a serialized `User` object to store data about a user's session in a cookie. If an attacker spotted the serialized object in an HTTP request, they might decode it to find the following byte stream: `0:4:"User":2:{s:8:"username";s:6:"carlos";s:7:"isAdmin";b:0;}`.
-- The `isAdmin` attribute is an obvious point of inters
+- The `isAdmin` attribute is an obvious point of interest. An attacker could simply change the boolean value of the attribute to `1` (true), re-encode the object, and overwrite their current cookie with this modified value. In isolation this has no effect; however, let's say the website uses this cookie to check whether the current user has access to certain admin functionality:
+```
+$user = unserialize($_COOKIE);
+if ($user->isAdmin === true) {
+// allow access to admin interface
+}
+```
+- The vulnerable code would instantiate a `User` object based on the data from the cookie, including the attacker-modified `isAdmin` attribute. At no point is the authenticity of the serialized object checked. This data is then passed into the conditional statement and, in this case, would allow for an easy privilege escalation. This simple scenario is not common in the wild; however, editing an attribute value in this way demonstrates the first step towards accessing the massive amount of attack-surface exposed by insecure deserialization. 
 
