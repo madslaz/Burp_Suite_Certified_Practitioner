@@ -18,4 +18,19 @@
 * Deserialization-based attacks are also made possible due to the number of dependencies that exist in modern websites. A typical site might implement many different libraries, which each have their own dependencies as well. This creates a massive pool of classes and methods that is difficult to manage securely. As an attacker can create instances of any of these classes, it is hard to predict which methods can be invoked on the malicious data. This is especially truth if an attacker is able to chain together a long series of unexpected method invocations, passing data into a sink that is completely unrelated to the initial source. It is, therefore, almost impossible to anticipate the flow of malicious data and plug every potential hole.
   * We are talking about **gadget chains** - when attackers targets your website with deserialization, they aren't usually uploading their own malicious code. They are using your code (and the code of the libraries you installed) against you. An attacker chains together a long series of classes (think of them like parts!) to do something small but useful. For example, Gadget A (in Library X) `When I am created, I write data to a file`, Gadget B (in Library Y) `When I am run, I execute whatever is in this file`; the attacker creates a serialized object that contains Gadget A inside of Gadget B, the website deserializes the object, Gadget A runs (because of a magic method) and writes a script to disk, Gadget B runs (triggered by Gadget A) and executes that script.
     * Magic method examples: `readObject()` for Java, `__wakeup()` and `__destruct()` for PHP (wakeup runs when `unserialize()` is called and destruct runs when the object is no longer needed and deleted from memory), `__reduce__` for Python (tells pickle library how to recreate the object)
-* In short, it can be argued that it is not possible to securely deserialize untrusted input. 
+* In short, it can be argued that it is not possible to securely deserialize untrusted input.
+
+### How to Identify Insecure Deserialization 
+#### PHP Serialization Format
+* PHP uses a mostly human-readable string format, with letters representing the data type and numbers representing the length of each entry. For example, consider a `User` object with the attributes:
+```
+$user->name = "carlos";
+$user->isLoggedIn = true;
+```
+* When serialized, this object may look something like this: `0:4:"User":2:{s:4:"name":s:6:"carlos";s:10:"isLoggedIn":b:1;}`
+  * `0:4:"User"` - an object with the 4-character class name `"User"`
+  * `2` - the object has 2 attributes
+  * `s:4:"name"` - the key of the first attribute is the 4-chracter string `"name"`
+  * `s:6:"carlos"` - the value of the first attribute is the 6-character string "carlos"
+  * `s:10:"isLoggedIn"` - the key of the second attribute is the 10-character string "isLoggedIn"
+  * `b:1` - the value of the second attribute is the boolean value `true`
