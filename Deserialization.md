@@ -34,3 +34,4 @@ $user->isLoggedIn = true;
   * `s:6:"carlos"` - the value of the first attribute is the 6-character string "carlos"
   * `s:10:"isLoggedIn"` - the key of the second attribute is the 10-character string "isLoggedIn"
   * `b:1` - the value of the second attribute is the boolean value `true`
+* The native methods for PHP serialization are `serialize()` and `unserialize()`. If you have source code access, you should start by looking for `unserialize()` anywhere in the code and investigating further. 
