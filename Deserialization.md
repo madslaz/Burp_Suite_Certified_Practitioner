@@ -9,4 +9,4 @@
 
 ### Insecure Deserialization
 * Insecure deserialization is when user-controllable data is deserialized by a website. This potentially enables an attacker to manipulate serialized objects in order to pass harmful data into the application code.
-* It is even possible to replace a serialized object with an object of an entirely different class. Alarmingly, objects of any class that is available
+* It is even possible to replace a serialized object with an object of an entirely different class. Alarmingly, objects of any class that is available to the website will be deserialized and instantiated, regardless of which class was expected. For this readon, insecure deserialization is sometimes known as an "object injection" vulnerability. 
