@@ -7,7 +7,7 @@
   * Note that all of the original object's attributes are stored in the serialized data stream, including any private fields. To prevent a field from being serialized, it must be explicitly marked as "transient" in the class declaration.
   * Be aware that when working with different programming languages, serialization may be referred to as marshalling (Ruby) or pickling (Python). These terms are synonymous with "serialization" in this context.
 
-### Insecure Deserialization
+#### Insecure Deserialization
 * Insecure deserialization is when user-controllable data is deserialized by a website. This potentially enables an attacker to manipulate serialized objects in order to pass harmful data into the application code.
 * It is even possible to replace a serialized object with an object of an entirely different class. Alarmingly, objects of any class that is available to the website will be deserialized and instantiated, regardless of which class was expected. For this readon, insecure deserialization is sometimes known as an "object injection" vulnerability.
 * An object of an unexpected class might cause an exception. By this time, however, the damage may already be done. Many deserialization-based attacks are completed **before** deserialization is finished. This means that the deserialization process itself can initiate an attack, even if the website's own functionality does not directly interact with the malicious object. For this reason, websites whose logic is based on strongly typed languages can also be vulnerable to these techniques.
@@ -35,3 +35,16 @@ $user->isLoggedIn = true;
   * `s:10:"isLoggedIn"` - the key of the second attribute is the 10-character string "isLoggedIn"
   * `b:1` - the value of the second attribute is the boolean value `true`
 * The native methods for PHP serialization are `serialize()` and `unserialize()`. If you have source code access, you should start by looking for `unserialize()` anywhere in the code and investigating further. 
+
+#### Java Serialization Format
+- Some languages, such as Java, use binary serialization formats. This is more difficult to read, but you can still identify serialized data if you know how to recognize a few tell-tale signs. For example, serialized Java objects always begins with the same bytes, which are encoded as `ac ed` in hexadecimal and `rO0` in Base64.
+- Any class that implements the interface `java.io.Serializable` can be serialized and deserialized. If you have source code access, take note of any code that uses the `readObject()` method, which is used to read and deserialize data from an `InputStream`.
+
+### Manipulating Serialized Objects
+- Exploiting some deserialization vulnerabilities can be easy as changing an attribute in a serialized object. As the object state is persisted, you can study the serialized data to identify and edit interesting attribute values. You can then pass the malicious object into the website via its deserialization process. This is the initial step for a basic deserialization exploit.
+- Broadly speaking, there are two approaches you can take when manipulating serialized objects. You can either edit the object directly in its byte stream form, or you can write a short script in the corresponding language to create and serialize the new object yourself. The latter approach is often easier when working with binary serialization formats. 
+
+#### Modifying Object Attributes
+- When tampering with the data, as long as the attacker preserves a valid serialized object, the deserialization process will create a server-side object with the modified attribute values. As a simple example, consider a website that uses a serialized `User` object to store data about a user's session in a cookie. If an attacker spotted the serialized object in an HTTP request, they might decode it to find the following byte stream: `0:4:"User":2:{s:8:"username";s:6:"carlos";s:7:"isAdmin";b:0;}`.
+- The `isAdmin` attribute is an obvious point of inters
+
