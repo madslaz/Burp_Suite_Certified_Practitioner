@@ -65,8 +65,14 @@ if ($login['password'] == $password) {
 // log in successfully
 }
 ```
- * Let's say an attacker modified the password attribute so that it contained the integer `0` instead of the expected string. As long as the stored password does not start with a number, the condition would always return `true`, enabling an authentication bypass. Note that this is only possible because 
+ * Let's say an attacker modified the password attribute so that it contained the integer `0` instead of the expected string. As long as the stored password does not start with a number, the condition would always return `true`, enabling an authentication bypass. Note that this is only possible because deserialization preserves the data type. If the code fetched the password from the request directly, the `0` would be converted to a string and the condition would evaluate to `false`.
+   * Note: in PHP 8 and later, the `0=="Example string"` comparison evaluates to `false` because strings are no longer implicitly converted to 0 during comparisons. As a result, this exploit is not possible on these versions of PHP. The behavior when comparing an alphanumeric string that starts with a number remains the same in PHP 8. As such, `5=="5 of something"` is still treats as `5==5`.
+* Be aware that when modifying data types in any serialized object format, it is important to remember to update any labels and length indicators in the serialized data too. Otherwise, the serialized object will be corrupted and will not be deserialized.
+* When working with binary formats, it is recommended to use `Hackvertor` extension, available in BApp. You can modify the serialized data as a string, and it will automatically update the binary data, adjusting the offsets accordingly. This can save you a lot of manual effort. 
 
 #### Lab: Modifying Serialized Objects
 * Decoding the session token as Base64 results in `O:4:"User":2:{s:8:"username";s:6:"wiener";s:5:"admin";b:0;}`. Flipping 0 to 1 and then attaching the session token to the request to `GET /admin/delete?username=carlos` to delete Carlos.
-* I was able to identify the admin panel by refreshing my account page with the altered session token, and the option appeared. I could use match and replace to make this easier. 
+* I was able to identify the admin panel by refreshing my account page with the altered session token, and the option appeared. I could use match and replace to make this easier.
+
+#### Lab: Modifying Serialized Data Types
+- 
