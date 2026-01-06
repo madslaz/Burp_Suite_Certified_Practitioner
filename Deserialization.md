@@ -73,7 +73,22 @@ if ($login['password'] == $password) {
 #### Using Application Functionality 
 * As well as simply checking attribute values, a website's functionality might also perform dangerous operations on data from a deserialized object. In this case, you can use insecure deserialization to pass in unexpected data and leverage the related functionality to do damage.
 * For example, as part of a website's "delete user" functionality, the user's profile picture is deleted by accessing the file path in the `$user -> image_location` attribute. If this `$user` was created from a serialized object, an attacker could exploit this by passing in a modified object with the `image_location` set to an arbitrary file path. Deleting their own user account would then delete this arbitrary file as well.
-  * This example relies on the attacker manually invoking the dangerous method via user-accessible functionality. However, insecure deserialization becomes much more interesting when you create exploits that pass data into dangerous methods automatically. This is enabled by the use of 'magic methods'. 
+  * This example relies on the attacker manually invoking the dangerous method via user-accessible functionality. However, insecure deserialization becomes much more interesting when you create exploits that pass data into dangerous methods automatically. This is enabled by the use of 'magic methods'.
+ 
+#### Magic Methods
+* Magic methods are a special subset of methods that you do not have to explicity invoke. Instead, they are invoked automatically whenever a particular event or scenario occurs. Magic methods are a common feature of object-oriented programming in various languages. They are sometimes indicated by prefixing or surrounding the method name with double underscores. Developers can add magic methods to a class in order to predetermine what code should be executed when the corresponding event or scenario ocurrs. Exactly when and why a magic method is invoked differs from method to method. One of the common examples in PHP is `__construct()` which is invoked whenever an object of the class is instantiated, similar to Python's `__init__`. Typically, constructor magic methods like this contain code to initialize the attributes of the instance; however, magic methods can be customized by developers to execute any code they want.
+* Magic methods are widely used and do not represent a vulnerability on their own. But they can become dangerous when the code that they execute handles attacker-controlled data, for example, from a deserialized object. This can be exploited by an attacker to automatically invoke methods on the deserialized data when the corresponding conditions are met.
+* Most importantly, in this context, some languages have magic methods that are invoked automatically during the deserialization process. For example, PHP's `unserialize()` method looks for and invokes an object's `__wakeup()` magic method.
+* In Java deserialization, the same applies to the `ObjectInputStream.readObject()` method, which is used to read data from the initial byte stream and essentially acts like a constructor for re-initializing a serialized object. However, `Serializable` classses can also declare their own `readObject()` method as follows below. A `readObject()` method delcared in exactly this way acts as a magic method that is invoked during deserialization. This allows the class to control the deserialization of its own fields more closely. 
+```
+private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException
+{
+ // implementation
+}
+```
+* You should pay attention to any classes that contain these types of magic methods. They allow you to pass data from a serialized object into the website's code before the object is fully deserialized. This is the starting point for creating more advanced exploits.
+
+#### Injecting Arbitrary Objects
 
 #### Lab: Modifying Serialized Objects
 * Decoding the session token as Base64 results in `O:4:"User":2:{s:8:"username";s:6:"wiener";s:5:"admin";b:0;}`. Flipping 0 to 1 and then attaching the session token to the request to `GET /admin/delete?username=carlos` to delete Carlos.
@@ -91,3 +106,4 @@ PHP Fatal error:  Uncaught Exception: (DEBUG: $access_tokens[$user-&gt;username]
 #### Lab: Using Application Functionality to Exploit Insecure Deserialization
 * Session cookie is this: `O:4:"User":3:{s:8:"username";s:6:"wiener";s:12:"access_token";s:32:"kmihavx4auvkl1t5yputq7n241ff75ln";s:11:"avatar_link";s:19:"users/wiener/avatar";}`
 * Initial payload was `O:4:"User":3:{s:8:"username";s:6:"wiener";s:12:"access_token";s:32:"kmihavx4auvkl1t5yputq7n241ff75ln";s:11:"avatar_link";s:23:"users/carlos/morale.txt";}` which did not work ... looking at previous labs, Carlos's home directory actually is `/home/carlos/morale.txt` so let's try `O:4:"User":3:{s:8:"username";s:6:"wiener";s:12:"access_token";s:32:"kmihavx4auvkl1t5yputq7n241ff75ln";s:11:"avatar_link";s:23:"/home/carlos/morale.txt";}` which worked!
+* 
