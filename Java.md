@@ -12,3 +12,10 @@
 * `public` is an access modifier that means the method can be called from any other class
 * `final` means the behavior of this method cannot be changed (overriden) by any class that might inherit.
 * `synchronized` is a keyword related to multithreading. It's like putting a "one person at a time" lock on the method, prventing potential errors if multiple parts of the program try to run it simultaneously.  
+
+### The Dot Operator
+* The dot (.) operator is used to access members (variables or methods) of an object or a class.
+ * When you see a method called on a variable that holds an object, like `getClass().getName()`, it means that `getName()` is a method that belongs to an object returned by `getClass()`.
+ * When you see a method called directly on a ClassName, it means the method is a static method (for example `ClassName.Method()`). Static methods belong to the class itself, not to a specific object created from that class, You don't need to create an object (`new ClassName()`) to call a static method. Think of it like a shared utility function that anyone can use directly through the class's name.
+ * Let's take a look at a heavily obfuscated method chain: `C7V1.LB(getClass().getName());`. `C7V1` is an obfuscated class name, while `.LB(...)` is a static method that belongs to the `C7V1` class. `.getClass().getName()` is the argument being passed to `C7V1.LB()`. Let's break it down: `getClass()` is a method that every Java object inherits from the universal `Object` class. When you call `getClass() ` (from inside `onCreate()`, it returns a `Class` object that represents the class of the current object. `.getName()` is a method called on the `Class` object (the one returned by `getClass()`). It returns the fully qualified name of that class as a String.
+    * So overall, it's calling a static method `LB` on the `C7V1` class, and it's passing the result of calling `getName()` on the object returned by `getClass()` as an argument. This is a common pattern for logging or tracking which class's lifecycle method is currently executing.  
