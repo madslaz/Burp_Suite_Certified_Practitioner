@@ -7,6 +7,7 @@
   * `myBlueCar` (the Name): This is the name of our variable. Once we create our specific car object, this is the name we'll use to refer to it.
   * `=` : This is the assignment operator. It means 'take whatever is on the right and put it into the variable on the left.'
   * `new Car()` (the Creation): This is the most magical part. The `new` keyword tells the Java Virtual Machine (JVM) to take the `Car` blueprint (the class) and actually create a new, unique object in memory. `Car()` is a special method called a constructor that runs to initialize the new object.
+* A method, such as `L()` being called on a class name means it must be a **static method** - regular methods can be called on objects but only static methods can be called on the class name directly. 
 
 ### Inheritance 
 * The `super` keyword in Java is a special reference used within a child class to refer to its immediate parent class. Thinking back to our discussion about inheritances with the class MountainBike and the class Bicycle, the super keyword has two main uses:
@@ -36,6 +37,7 @@ class MountainBike extends Bicycle {
  * When you see a method called directly on a ClassName, it means the method is a static method (for example `ClassName.Method()`). Static methods belong to the class itself, not to a specific object created from that class, You don't need to create an object (`new ClassName()`) to call a static method. Think of it like a shared utility function that anyone can use directly through the class's name.
  * Let's take a look at a heavily obfuscated method chain: `C7V1.LB(getClass().getName());`. `C7V1` is an obfuscated class name, while `.LB(...)` is a static method that belongs to the `C7V1` class. `.getClass().getName()` is the argument being passed to `C7V1.LB()`. Let's break it down: `getClass()` is a method that every Java object inherits from the universal `Object` class. When you call `getClass() ` (from inside `onCreate()`, it returns a `Class` object that represents the class of the current object. `.getName()` is a method called on the `Class` object (the one returned by `getClass()`). It returns the fully qualified name of that class as a String.
     * So overall, it's calling a static method `LB` on the `C7V1` class, and it's passing the result of calling `getName()` on the object returned by `getClass()` as an argument. This is a common pattern for logging or tracking which class's lifecycle method is currently executing.
+ * You can only use the (.) dot operator to call a method on an object.
   
 ### Catch-all
 * **Singleton**: Singleton is a design pattern in programming that ensures a class has only one instance (one object) throughout the entire application's lifetime. It provides a global point of access to that single instance.
