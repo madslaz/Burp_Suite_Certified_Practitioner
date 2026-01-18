@@ -100,7 +100,13 @@ private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundE
 
 #### Working with Pre-Built Gadget Chains
 * Manually identifying gadget chains can be a fairly arduous process, and is almost impossible without source code access. Fortunately, there are a few options for working with pre-built gadget chains that you can try first. There are several tools available that provide a range of pre-discovered chains that have been successfully exploited on other websites. Even if you don't have access to the source code, you can use these tools to both identify and exploit insecure deserialization vulnerabilities with relatively little effort. This approach is made possible due to the widespread use of libraries that contain exploitable gadget chains. For example, if a gadget chain in Java's Apache Commons Collections library can be exploited on one website, any other website that implements this library may also be exploitable using the same chain.
-* **ysoserial**: One such tool for Java deserialization is ysoserial. This lets you choose one of the provided gadget chains for a library that you think the target application is using, then pass in a command that you want to execute. It then creates an appropriate serialized object based on the selected chain. This still involves a certain amount of trial and error, but it is considerably less labor-intensive than constructing your own gadget chains manually. 
+* **ysoserial**: One such tool for Java deserialization is ysoserial. This lets you choose one of the provided gadget chains for a library that you think the target application is using, then pass in a command that you want to execute. It then creates an appropriate serialized object based on the selected chain. This still involves a certain amount of trial and error, but it is considerably less labor-intensive than constructing your own gadget chains manually.
+* Not all of the gadget chains in ysoserial enable you to run arbitrary code. Instead, they may be useful for other purposes. For example, you can use the following ones to help you quickly detect insecure deserialization on virtually any server:
+ * **URLDNS** chain triggers a DNS lookup for a supplied URL. Most importantly, it does not rely on the target application using a specific vulnerable library and works in any known Java version. This makes it the most universal gadget chain for detection purposes. If you spot a deserialized object in the traffic, you can try using this gadget chain to generate an object that triggers a DNS interaction with the Burp collab server. If it does, you can be sure that deserialization occurred on your target.
+ * **JRMPClient** is another universal chain that you can use for initial detection. It causes the server to try and establish a TCP connection to the supplied IP address. note that you need to provide a raw IP address rather than a hostname. This chain may be useful environments where all outbound taffic is firewalled, including DNS lookups. You can try generating payloads with two differnet IP addresses: a local one and a firewalled, external one. If the application responds immediately for a payload with a local address, but hangs for a payload with a firewalled external address, causing a delay in the response, you can tell that the gadget chain worked because the server tried to connect/establish a TCP handshake with the external address. In this case, the subtle time difference in response can help you detect whether deserialization occurs on the server, even in blind cases.
+
+#### PHP Generic Gadget Chains
+* Most languages that frequently suffer from insecure deserialization vulnerabilities have equivalent proof-of-concept tools. For example, for PHP-based sites, you can use PHP Generic Gadget Chains (PHPGGC).
 
 #### Lab: Modifying Serialized Objects
 * Decoding the session token as Base64 results in `O:4:"User":2:{s:8:"username";s:6:"wiener";s:5:"admin";b:0;}`. Flipping 0 to 1 and then attaching the session token to the request to `GET /admin/delete?username=carlos` to delete Carlos.
@@ -178,3 +184,10 @@ java \
 -jar ysoserial-all.jar CommonsCollections2 'rm -f /home/carlos/morale.txt' | base64 -w 0
 ```
 * I replaced the serialized session token with the base64 encoded object, using Hackvertor to URL encode it. 
+
+#### Lab: Exploiting PHP Deserialization with a Pre-built Gadget Chain
+* Discovered the session token base64 decoded into `O:4:"User":2:{s:8:"username";s:6:"wiener";s:12:"access_token";s:32:"rzjnu968uro01uuk4hhcowea4br8dyyg";}`. I also noticed this, sig_hmac_sha1, so we need to sign our new malicious object, but we need to find the secret key. Before we even do that, we need to identify the running framework ... hey, didn't we just chat about php info pages somewhere? 
+* Using Burp Suite and active scan, I identified `/cgi-bin/phpinfo.php`.
+```
+{"token":"Tzo0OiJVc2VyIjoyOntzOjg6InVzZXJuYW1lIjtzOjY6IndpZW5lciI7czoxMjoiYWNjZXNzX3Rva2VuIjtzOjMyOiJyempudTk2OHVybzAxdXVrNGhoY293ZWE0YnI4ZHl5ZyI7fQ==","sig_hmac_sha1":"c6c471ba5d8c1dff600ae4df9c0111ea6faa6b29"}
+```
