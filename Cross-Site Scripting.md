@@ -16,4 +16,4 @@ document.write('<img src="/resources/images/tracker.gif?searchTerms='+encodeURIC
 
 * Only possible in Chrome. Canonical link element is an HTML element that helps webmasters prevent duplicate content issues in search engine optimization by specifying "canonical" or "preferred" version of a web page. 
 - Originally, I was thinking something like `GET /post?postId=4&><script>alert(1)</script>`, but I forgot the hint mentions it escapes angle brackets. Next payload ... what about that mention of keyboard use?
-- <xss onkeypress="alert(1)" contenteditable style=display:block>test</xss>
+- `<xss onkeypress="alert(1)" contenteditable style=display:block>test</xss>`
