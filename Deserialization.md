@@ -108,6 +108,9 @@ private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundE
 #### PHP Generic Gadget Chains
 * Most languages that frequently suffer from insecure deserialization vulnerabilities have equivalent proof-of-concept tools. For example, for PHP-based sites, you can use PHP Generic Gadget Chains (PHPGGC).
 
+#### Working with Documented Gadget Chains
+- There may not always be a dedicated tool available for exploiting known gadget chains in a framework used by the target application. In this case, it's always worth looking online to see if there are any documented exploits that you can adapt manually. Tweaking the code may require some basic understanding of the language and framework, and you might need to serialize the object yourself, but the approach is still considerably less effort than building an exploit from stach. 
+
 #### Lab: Modifying Serialized Objects
 * Decoding the session token as Base64 results in `O:4:"User":2:{s:8:"username";s:6:"wiener";s:5:"admin";b:0;}`. Flipping 0 to 1 and then attaching the session token to the request to `GET /admin/delete?username=carlos` to delete Carlos.
 * I was able to identify the admin panel by refreshing my account page with the altered session token, and the option appeared. I could use match and replace to make this easier.
@@ -193,3 +196,6 @@ java \
 * Using Burp Suite and active scan, I identified `/cgi-bin/phpinfo.php`...OH cool, would you look at that: `SECRET_KEY	tlo1sr116emjtxd1r7inwyuxz6fbvn0j`. That's one task down. 
 * I guessed Symfony through trial and error because I struggled to find any evidence on the phpinfo.php page, and I couldn't produce a verbose error message ... after the fact, I found a stack trace by submitting an incorrect signature, which resulted in a stack trace saying `Internal Server Error: Symfony Version: 4.3.6`.
 * Okay, with the secret key, I SHA-1 hashed the following Base64 encoded payload generated using `./phpggc Symfony/RCE1 "rm -f /home/carlos/morale.txt" | base64 -w 0`.
+
+#### Exploiting Ruby Deserialization Using a Documented Gadget Chain
+- Serialization-based session mechanism and Ruby on Rails framework. 
