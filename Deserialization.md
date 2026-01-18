@@ -186,8 +186,10 @@ java \
 * I replaced the serialized session token with the base64 encoded object, using Hackvertor to URL encode it. 
 
 #### Lab: Exploiting PHP Deserialization with a Pre-built Gadget Chain
-* Discovered the session token base64 decoded into `O:4:"User":2:{s:8:"username";s:6:"wiener";s:12:"access_token";s:32:"rzjnu968uro01uuk4hhcowea4br8dyyg";}`. I also noticed this, sig_hmac_sha1, so we need to sign our new malicious object, but we need to find the secret key. Before we even do that, we need to identify the running framework ... hey, didn't we just chat about php info pages somewhere? 
-* Using Burp Suite and active scan, I identified `/cgi-bin/phpinfo.php`.
+* Discovered the session token base64 decoded into `O:4:"User":2:{s:8:"username";s:6:"wiener";s:12:"access_token";s:32:"rzjnu968uro01uuk4hhcowea4br8dyyg";}`. I also noticed this, sig_hmac_sha1, so we need to sign our new malicious object, but we need to find the secret key. Before we even do that, we need to identify the running framework ... hey, didn't we just chat about php info pages somewhere?
 ```
 {"token":"Tzo0OiJVc2VyIjoyOntzOjg6InVzZXJuYW1lIjtzOjY6IndpZW5lciI7czoxMjoiYWNjZXNzX3Rva2VuIjtzOjMyOiJyempudTk2OHVybzAxdXVrNGhoY293ZWE0YnI4ZHl5ZyI7fQ==","sig_hmac_sha1":"c6c471ba5d8c1dff600ae4df9c0111ea6faa6b29"}
 ```
+* Using Burp Suite and active scan, I identified `/cgi-bin/phpinfo.php`...OH cool, would you look at that: `SECRET_KEY	tlo1sr116emjtxd1r7inwyuxz6fbvn0j`. That's one task down. 
+* I guessed Symfony through trial and error because I struggled to find any evidence on the phpinfo.php page, and I couldn't produce a verbose error message ... after the fact, I found a stack trace by submitting an incorrect signature, which resulted in a stack trace saying `Internal Server Error: Symfony Version: 4.3.6`.
+* Okay, with the secret key, I SHA-1 hashed the following Base64 encoded payload generated using `./phpggc Symfony/RCE1 "rm -f /home/carlos/morale.txt" | base64 -w 0`.
