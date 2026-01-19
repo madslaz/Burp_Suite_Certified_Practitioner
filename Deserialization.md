@@ -198,4 +198,6 @@ java \
 * Okay, with the secret key, I SHA-1 hashed the following Base64 encoded payload generated using `./phpggc Symfony/RCE1 "rm -f /home/carlos/morale.txt" | base64 -w 0`.
 
 #### Exploiting Ruby Deserialization Using a Documented Gadget Chain
-- Serialization-based session mechanism and Ruby on Rails framework. 
+- Serialization-based session mechanism and Ruby on Rails framework. PS informs us to find a well documented exploit to create a malicious serialized object containing a remote code execution payload to delete `/home/carlos/morale.txt`.
+- I was a bit confused when I first looked up some gadgets, as I was not familiar with Ruby on Rails and its use of YAML. Older Rails apps will use YAML to store objects, while newer Rails apps use Marshal (a binary format) or JSON.  I read through a blog post, https://devcraft.io/2021/01/07/universal-deserialisation-gadget-for-ruby-2-x-3-x.html, for deeper understanding. In YAML, `!ruby/object` is a tag that forces the server to treat the data as code execution, not just text.
+- To figure out whether we were dealing with YAML or Marshal, I base64 decoded the token, and I found the hex started with 0408, meaning it's Marshal. YAML would begin with `---`. 
