@@ -255,4 +255,82 @@ require 'base64'
 puts Base64.strict_encode64(payload)
 ```
 #### Lab: Developing a Custom Gadget Chain for Java Deserialization
-- I went ahead and opened the hint for this lab, as I knew we were stepping up quite a bit in difficulty. 
+* I went ahead and opened the hint for this lab, as I knew we were stepping up quite a bit in difficulty. The hint provided a generic Java program for serializing objects which can be adapted to generate a suitable object for our exploit. It also mentioned browser-based IDE, `repl.it`.
+* I started reviewing the sources, and I noticed a comment mentioning `/backup/AccessTokenUser.java` ... I navigated to that directory, `https://0ad100b60445e04087e91112003a0021.web-security-academy.net/backup/AccessTokenUser.java`, and I found some of the source code ... now to explore more of `backup`... cool, an index of backup also reveals the `ProductTemplate.java` source code. Let's take a look at it below.
+ * We need to find the magic method, remember from above:
+```
+ In Java deserialization, the same applies to the `ObjectInputStream.readObject()` method, which is used to read data from the initial byte stream and essentially acts like a constructor for re-initializing a serialized object. However, `Serializable` classses can also declare their own `readObject()` method as follows below. A `readObject()` method delcared in exactly this way acts as a magic method that is invoked during deserialization. This allows the class to control the deserialization of its own fields more closely. 
+
+private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException
+{
+ // implementation
+}
+
+```
+```
+package data.productcatalog;
+
+import common.db.JdbcConnectionBuilder;
+
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.Serializable;
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+
+public class ProductTemplate implements Serializable
+{
+    static final long serialVersionUID = 1L;
+
+    private final String id;
+    private transient Product product;
+
+    public ProductTemplate(String id)
+    {
+        this.id = id;
+    }
+
+    private void readObject(ObjectInputStream inputStream) throws IOException, ClassNotFoundException
+    {
+        inputStream.defaultReadObject();
+
+        JdbcConnectionBuilder connectionBuilder = JdbcConnectionBuilder.from(
+                "org.postgresql.Driver",
+                "postgresql",
+                "localhost",
+                5432,
+                "postgres",
+                "postgres",
+                "password"
+        ).withAutoCommit();
+        try
+        {
+            Connection connect = connectionBuilder.connect(30);
+            String sql = String.format("SELECT * FROM products WHERE id = '%s' LIMIT 1", id);
+            Statement statement = connect.createStatement();
+            ResultSet resultSet = statement.executeQuery(sql);
+            if (!resultSet.next())
+            {
+                return;
+            }
+            product = Product.from(resultSet);
+        }
+        catch (SQLException e)
+        {
+            throw new IOException(e);
+        }
+    }
+
+    public String getId()
+    {
+        return id;
+    }
+
+    public Product getProduct()
+    {
+        return product;
+    }
+}
+```
