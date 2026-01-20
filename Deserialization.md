@@ -372,3 +372,5 @@ public class ProductTemplate implements Serializable
     }
 }
 ```
+#### Lab: Developing a Custom Gadget Chain for PHP Deserialization 
+- 
