@@ -1,3 +1,4 @@
+## Java
 ### Method vs. Class
 * **Class**: Think of class as a blueprint. For example, a Car class wouold be a blueprint that defines what a car is; it has properties (like color, numberOfDoors) and it has abilities (like startEngine(), accelerate(), brake()). The class itself is not a car; it's just the design for one.
 * **Method**: Method is an action or a function that an object created from a class can perform. It's a block of code that runs when it's called. Using your Car blueprint, startEngine() would be a method.
