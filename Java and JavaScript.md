@@ -43,3 +43,9 @@ class MountainBike extends Bicycle {
 ### Catch-all
 * **Singleton**: Singleton is a design pattern in programming that ensures a class has only one instance (one object) throughout the entire application's lifetime. It provides a global point of access to that single instance.
  * Often used for things like loggers, configuration managers, and database connection pools. 
+
+## JavaScript
+* A `try` block cannot stand alone. It must be followed by a `catch` or `finally` block.
+  * `try ... catch`: Run code that might fail, you want to do something specific if it does
+  * `try ... finally`: When you don't care about handling the error, but you need to run cleanup code after regardless of fail or success
+  * `try ... catch ... finally`: Combo
