@@ -49,3 +49,5 @@ class MountainBike extends Bicycle {
   * `try ... catch`: Run code that might fail, you want to do something specific if it does
   * `try ... finally`: When you don't care about handling the error, but you need to run cleanup code after regardless of fail or success
   * `try ... catch ... finally`: Combo
+ * Async/await: `async` keyword is placed before a function declaration. It automatically makes the function return a `Promise` and allows you to use `await` keyword inside that function.
+   * `await` allows you to continue doing other things while the long-running task performs. Once it is done, the function resumes right there at the `await` keyword. 
